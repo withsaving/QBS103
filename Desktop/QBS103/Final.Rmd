@@ -119,7 +119,6 @@ categorical_covariate_list <- list("mechanical_ventilation", "sex", "icu_status"
 continuous_covariate <- "age"
 
 # Calling the plot_creation function with four parameters
-#plot_creation(gene_input, list("AAAS"), continuous_covariate, categorical_covariate_list)
 for (x in 1:length(gene_list)) {
   plot_creation(gene_input, gene_list[x], continuous_covariate, categorical_covariate_list)
 }
