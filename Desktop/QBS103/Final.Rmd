@@ -1,8 +1,6 @@
 ---
 title: "Final Project"
-output:
-  html_document:
-    df_print: paged
+output: pdf_document
 date: "2023-07-24"
 ---
 
@@ -15,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
 
 ```{r}
 plot_creation <- function(data_gene, gene_list, covariate, categorical_covariate_list) {
@@ -30,6 +29,7 @@ plot_creation <- function(data_gene, gene_list, covariate, categorical_covariate
         "Age" = strtoi(meta_data[[covariate]]),
         # Newly added continuous covariate
         "Days" = meta_data$hospital.free_days_post_45_day_followup,
+        "charlson_score" = strtoi(meta_data$charlson_score),
         "Categorical2" = meta_data[[toString(categorical_covariate_list[2])]],
         "Categorical" = meta_data[[toString(categorical_covariate_list[1])]],
         "Categorical3" = meta_data[[toString(categorical_covariate_list[3])]],
@@ -61,7 +61,7 @@ plot_creation <- function(data_gene, gene_list, covariate, categorical_covariate
         y = substitute(paste(bolditalic(gene1), " Gene Expression"))
       ) +
       theme(plot.title = element_text(size = 18, color = "darkgreen", hjust = 1/2),
-            panel.background = element_rect(fill = 'lightblue', color = 'black'),
+            panel.background = element_rect(fill = '#ADD8E6', color = 'black'),
             panel.grid.major = element_line(color = 'black', linetype = 'dotted')) +
       geom_hline(yintercept = mean(linked_remove_null1$Gene_Value), color = "orange", size = 2) +
       geom_hline(yintercept = mean(linked_remove_null1$Gene_Value) + sd(linked_remove_null1$Gene_Value), 
@@ -178,7 +178,7 @@ pheatmap(heat_gene[80:90,],
          cluster_rows = T, cluster_cols = T,
          clustering_distance_cols = 'euclidean',
          clustering_distance_rows = 'euclidean',
-         main = "HEATMAP\n(Genes vs Participants)",
+         main = "HEATMAP\n(Genes vs Participants): euclidean",
          display_numbers = FALSE,
          number_color = "black",
          border_color = "black",
@@ -201,7 +201,7 @@ pheatmap(heat_gene[80:90,1:20],
          cluster_rows = T, cluster_cols = T,
          clustering_distance_cols = 'euclidean',
          clustering_distance_rows = 'euclidean',
-         main = "HEATMAP\n(Genes vs Participants)",
+         main = "HEATMAP\n(Genes vs Participants): euclidean",
          display_numbers = TRUE,
          number_color = "black",
          border_color = "black",
@@ -222,35 +222,51 @@ pheatmap(heat_gene[80:90,1:20],
 
 # Table of summary statistics
 linked_remove_null1 <- linked_remove_unknown1[complete.cases(linked_remove_unknown1),]
-
 # Create table of summary for covariates
-table_summary <- data.frame("Variable" = c("Age: mean (sd)", "Sex: n(%)", "Female", "Male", "Mechanical Ventilation: n(%)", "Yes", "No",
+male_table <- linked_remove_null1 %>% filter(Categorical2 == " male")
+female_table <- linked_remove_null1 %>% filter(Categorical2 == " female")
+
+table_summary <- data.frame("Variable" = c("Age: mean (sd)", "Mechanical Ventilation: n(%)", "Yes", "No",
                                            "Follow Up Days: mean (sd)", "ICU Status: n(%)", "Yes", "No", "COVID-19 Status: n(%)",
-                                           "COVID-19", "NON COVID-19"),
-                     "Value" = c(paste0(round(mean(linked_remove_null1$Age),2)," (", round(sd(linked_remove_null1$Age),2),")"), "",
-                                 round(sum(linked_remove_null1$Categorical2 == " female")/length(linked_remove_null1[,1])*100,2),
-                                 round(sum(linked_remove_null1$Categorical2 == " male")/length(linked_remove_null1[,1])*100,2), "",
-                                 round(sum(linked_remove_null1$Categorical == " yes")/length(linked_remove_null1[,1])*100,2),
-                                 round(sum(linked_remove_null1$Categorical == " no")/length(linked_remove_null1[,1])*100,2),
-                                 paste0(round(mean(linked_remove_null1$Days),2)," (", round(sd(linked_remove_null1$Days),2),")"), "",
-                                 round(sum(linked_remove_null1$Categorical3 == " yes")/length(linked_remove_null1[,1])*100,2),
-                                 round(sum(linked_remove_null1$Categorical3 == " no")/length(linked_remove_null1[,1])*100,2), "",
-                                 round(sum(linked_remove_null1$Categorical4 == "disease state: COVID-19")
-                                       /length(linked_remove_null1[,1])*100,2),
-                                 round(sum(linked_remove_null1$Categorical4 == "disease state: non-COVID-19")
-                                       /length(linked_remove_null1[,1])*100,2)))
+                                           "COVID-19", "NON COVID-19", "Charlson Score: mean (sd)"),
+                     "Value" = c(paste0(round(mean(male_table$Age),2)," (", round(sd(male_table$Age),2),")"),"",
+                                 round(sum(male_table$Categorical == " yes")/length(male_table[,1])*100,0),
+                                 round(sum(male_table$Categorical == " no")/length(male_table[,1])*100,0),
+                                 paste0(round(mean(male_table$Days),2)," (", round(sd(male_table$Days),2),")"), "",
+                                 round(sum(male_table$Categorical3 == " yes")/length(male_table[,1])*100,0),
+                                 round(sum(male_table$Categorical3 == " no")/length(male_table[,1])*100,0), "",
+                                 round(sum(male_table$Categorical4 == "disease state: COVID-19")
+                                       /length(male_table[,1])*100,0),
+                                 round(sum(male_table$Categorical4 == "disease state: non-COVID-19")
+                                       /length(male_table[,1])*100,0),
+                                 paste0(round(mean(male_table$charlson_score),2)," (", round(sd(male_table$charlson_score),2),")")),
+                     "Variable" = c("Age: mean (sd)", "Mechanical Ventilation: n(%)", "Yes", "No",
+                                           "Follow Up Days: mean (sd)", "ICU Status: n(%)", "Yes", "No", "COVID-19 Status: n(%)",
+                                           "COVID-19", "NON COVID-19", "Charlson Score: mean (sd)"),
+                     "Value" = c(paste0(round(mean(female_table$Age),2)," (", round(sd(female_table$Age),2),")"),"",
+                                 round(sum(female_table$Categorical == " yes")/length(female_table[,1])*100,2),
+                                 round(sum(female_table$Categorical == " no")/length(female_table[,1])*100,2),
+                                 paste0(round(mean(female_table$Days),2)," (", round(sd(female_table$Days),2),")"), "",
+                                 round(sum(female_table$Categorical3 == " yes")/length(female_table[,1])*100,2),
+                                 round(sum(female_table$Categorical3 == " no")/length(female_table[,1])*100,2), "",
+                                 round(sum(female_table$Categorical4 == "disease state: COVID-19")
+                                       /length(female_table[,1])*100,2),
+                                 round(sum(female_table$Categorical4 == "disease state: non-COVID-19")
+                                       /length(female_table[,1])*100,2),
+                                 paste0(round(mean(female_table$charlson_score),2)," (", round(sd(female_table$charlson_score),2),")")))
 
 # Edit table attributes
 kable(table_summary, caption = "<span style='font-size:20px'><b>Summary Table for Covariates</b></span>",
-    col.names = c("Variable", length(gene_input[,1])),
+    col.names = c("Male", sum(linked_remove_null1$Categorical2 == " male"), "Female", sum(linked_remove_null1$Categorical2 == " female")),
     align = c('l','r'),escape = T) %>%
-    row_spec(c(0,1,2,5,8,9,12),bold=T,hline_after = T)%>%
-    add_indent(positions = c(3,4,6,7,10,11,13,14)) %>%
-    column_spec(2,bold = T, width = "30em", background = "lightblue")%>%
-    column_spec(1, width = "30em", background = "lightyellow")%>%
+    row_spec(c(0,1,2,5,6,9,12),bold=T,hline_after = T)%>%
+    add_indent(positions = c(3,4,7,8,10,11)) %>%
+    column_spec(2,bold = T, background = "#ADD8E6")%>%
+    column_spec(1, background = "yellow")%>%
+    column_spec(4,bold = T, background = "#ADD8E6")%>%
+    column_spec(3, background = "yellow")%>%
     row_spec(0, background = "pink")%>%
   kable_classic()
 
 ```
-
 
